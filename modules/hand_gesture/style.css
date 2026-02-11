@@ -1,0 +1,224 @@
+:root{
+  --bg:#071021;
+  --panel:#0b1220;
+  --muted:#91a0b7;
+  --accent:#00e5a8;
+  --glass: rgba(255,255,255,0.04);
+  --card: rgba(255,255,255,0.03);
+  --highlight: rgba(0,229,168,0.08);
+}
+
+/* Reset + layout */
+*{box-sizing:border-box}
+html,body,#app{height:100%; margin:0; padding:0; font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial}
+body{background:linear-gradient(180deg,#02040a 0%, #081526 60%); color:#dbeaf3; -webkit-font-smoothing:antialiased; overflow:hidden}
+
+/* Canvas fills page minus panel width */
+#canvas{
+  position:fixed;
+  left:0;
+  top:0;
+  width: calc(100% - 340px);
+  height:100%;
+  background: #000;
+  display:block;
+  z-index:1;
+  cursor: crosshair;
+}
+
+/* Panel */
+.panel{
+  position:fixed;
+  right:0;
+  top:0;
+  width:340px;
+  height:100%;
+  background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  border-left:1px solid rgba(255,255,255,0.03);
+  padding:20px;
+  z-index:2;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+.panel-header h1{margin:0; font-size:20px; letter-spacing:0.6px}
+.panel-header p.muted{margin:0; color:var(--muted); font-size:12px}
+.panel-section{padding:12px; background:var(--card); border-radius:10px; box-shadow: 0 6px 20px rgba(0,0,0,0.6)}
+.controls-grid{display:flex; gap:8px; flex-wrap:wrap}
+.btn{background:transparent; color:var(--muted); border:1px solid rgba(255,255,255,0.04); padding:8px 10px; border-radius:8px; cursor:pointer; font-weight:600}
+.btn.primary{background:linear-gradient(90deg,var(--accent),#00b3ff); color:#021018; border:none; box-shadow:0 8px 24px rgba(0,229,168,0.06)}
+small.muted{color:var(--muted)}
+.muted{color:var(--muted)}
+.small{font-size:12px}
+
+/* Stats */
+.stats{display:flex; flex-direction:column; gap:6px; font-size:13px}
+
+/* Footer */
+.footer{margin-top:auto; text-align:center}
+
+/* Minimal responsiveness */
+@media (max-width:900px){
+  #canvas{width:100%}
+  .panel{position:fixed; bottom:0; right:0; left:0; width:100%; height:320px; border-left:none; border-top:1px solid rgba(255,255,255,0.03)}
+}
+
+/* App wrapper */
+.app {
+  width: 100vw;
+  height: 100vh;
+  position: relative;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+/* Responsive Panel & Canvas */
+@media (max-width: 900px) {
+  #canvas {
+    width: 100vw !important;
+    height: calc(100vh - 320px) !important;
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: 1;
+  }
+  .panel {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    top: unset;
+    width: 100vw !important;
+    height: 320px !important;
+    max-height: 60vh;
+    border-left: none;
+    border-top: 1px solid rgba(255,255,255,0.03);
+    border-radius: 18px 18px 0 0;
+    box-shadow: 0 -8px 32px rgba(0,0,0,0.18);
+    overflow-y: auto;
+    padding-bottom: 24px;
+    z-index: 10;
+    background: linear-gradient(180deg, rgba(20,24,32,0.98), rgba(10,14,22,0.98));
+    touch-action: pan-y;
+  }
+  .panel-section {
+    padding: 10px 6px;
+    margin-bottom: 6px;
+  }
+  .panel-header h1 {
+    font-size: 18px;
+  }
+  .btn, select, input[type="range"] {
+    font-size: 1.1em;
+    min-height: 44px;
+    min-width: 44px;
+    padding: 10px 14px;
+  }
+}
+
+/* Even smaller screens */
+@media (max-width: 600px) {
+  .panel {
+    height: 60vh !important;
+    min-height: 220px;
+    max-height: 80vh;
+    padding: 10px 2vw 18px 2vw;
+  }
+  .panel-header h1 {
+    font-size: 16px;
+  }
+  .panel-section {
+    padding: 8px 2px;
+  }
+  .btn, select, input[type="range"] {
+    font-size: 1em;
+    min-height: 40px;
+    min-width: 40px;
+    padding: 8px 10px;
+  }
+}
+
+/* Add scroll for panel if content overflows */
+.panel {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Make controls-grid wrap and space better on mobile */
+.controls-grid {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: stretch;
+}
+@media (max-width: 600px) {
+  .controls-grid {
+    gap: 6px;
+  }
+}
+
+/* Add missing .app class for wrapper */
+.app {
+  display: flex;
+  flex-direction: row;
+  width: 100vw;
+  height: 100vh;
+}
+
+/* Make .panel-section more visually separated */
+.panel-section {
+  margin-bottom: 10px;
+  background: var(--card);
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+/* Button improvements */
+.btn, select {
+  transition: background 0.18s, color 0.18s, border 0.18s;
+}
+.btn:active, .btn:focus {
+  outline: 2px solid var(--accent);
+  background: var(--highlight);
+}
+.btn.primary:active {
+  background: linear-gradient(90deg,#00e5a8,#00b3ff);
+  color: #021018;
+}
+
+/* Range input styling for mobile */
+input[type="range"] {
+  width: 100%;
+  accent-color: var(--accent);
+  margin: 6px 0;
+}
+
+/* Muted text */
+.muted {
+  color: var(--muted) !important;
+}
+
+/* Small text */
+.small {
+  font-size: 12px !important;
+}
+
+/* Stats section tweaks */
+.stats {
+  font-size: 14px;
+  gap: 4px;
+}
+
+/* Footer */
+.footer {
+  margin-top: auto;
+  text-align: center;
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+/* Hide scrollbars on mobile for panel */
+.panel::-webkit-scrollbar {
+  width: 0 !important;
+  background: transparent !important;
+}

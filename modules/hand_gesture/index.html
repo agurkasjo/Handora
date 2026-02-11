@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>HANDORA — Advanced v3 (Hand/Arm/Body + Laser)</title>
+
+  <!-- Styles: panel, canvas, modals, toaster -->
+  <style>
+    :root{
+      --bg:#071021;
+      --panel:#0b1220;
+      --muted:#91a0b7;
+      --accent:#00e5a8;
+      --glass: rgba(255,255,255,0.04);
+      --card: rgba(255,255,255,0.03);
+      --highlight: rgba(0,229,168,0.08);
+      --toast-bg: linear-gradient(180deg,#111,#0b0f14);
+      --modal-bg: rgba(2,6,12,0.8);
+    }
+
+    *{box-sizing:border-box}
+    html,body,#app{height:100%; margin:0; padding:0; font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial}
+    body{background:linear-gradient(180deg,#02040a 0%, #081526 60%); color:#dbeaf3; -webkit-font-smoothing:antialiased; overflow:hidden}
+
+    #canvas{
+      position:fixed;
+      left:0;
+      top:0;
+      width: calc(100% - 340px);
+      height:100%;
+      background: #000;
+      display:block;
+      z-index:1;
+      cursor: crosshair;
+    }
+
+    .panel{
+      position:fixed;
+      right:0;
+      top:0;
+      width:340px;
+      height:100%;
+      background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      border-left:1px solid rgba(255,255,255,0.03);
+      padding:20px;
+      z-index:2;
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+      overflow-y:auto;
+    }
+    .panel-header h1{margin:0; font-size:20px; letter-spacing:0.6px}
+    .panel-header p.muted{margin:0; color:var(--muted); font-size:12px}
+    .panel-section{padding:12px; background:var(--card); border-radius:10px; box-shadow: 0 6px 20px rgba(0,0,0,0.6)}
+    .controls-grid{display:flex; gap:8px; flex-wrap:wrap}
+    .btn{background:transparent; color:var(--muted); border:1px solid rgba(255,255,255,0.04); padding:8px 10px; border-radius:8px; cursor:pointer; font-weight:600}
+    .btn.primary{background:linear-gradient(90deg,var(--accent),#00b3ff); color:#021018; border:none; box-shadow:0 8px 24px rgba(0,229,168,0.06)}
+    small.muted{color:var(--muted)}
+    .muted{color:var(--muted)}
+    .small{font-size:12px}
+
+    .stats{display:flex; flex-direction:column; gap:6px; font-size:13px}
+    .footer{margin-top:auto; text-align:center}
+
+    /* Modal + animation */
+    .hf-modal { position: fixed; inset: 0; display:flex; align-items:center; justify-content:center; background: var(--modal-bg); z-index:12000; opacity:0; pointer-events:none; transition: opacity .22s ease; }
+    .hf-modal.show { opacity:1; pointer-events:auto; }
+    .hf-panel { width:680px; max-width:94%; background:#0f1116; color:#fff; border-radius:12px; padding:16px; box-shadow:0 10px 40px rgba(0,0,0,0.6); transform: translateY(10px) scale(.995); transition: transform .28s cubic-bezier(.2,.9,.2,1); }
+    .hf-modal.show .hf-panel { transform: translateY(0) scale(1); }
+
+    .toast-root { position: fixed; right: 22px; top: 22px; z-index:13000; display:flex; flex-direction:column; gap:8px; pointer-events:none; max-width:320px; }
+    .hf-toast { pointer-events:auto; background: var(--toast-bg); color:#fff; padding:10px 14px; border-radius:10px; box-shadow:0 6px 18px rgba(0,0,0,0.6); transform: translateY(-6px); opacity:0; animation: hf-toast-in .28s forwards; font-family: Inter, sans-serif; }
+    .hf-toast.small { font-size:13px; padding:8px 10px; }
+    @keyframes hf-toast-in { to { transform: translateY(0); opacity:1;} }
+
+    /* laser glow layers */
+    .laser-glow {
+      filter: blur(6px) saturate(130%);
+      mix-blend-mode: screen;
+    }
+
+    /* responsive tweaks */
+    @media (max-width:900px){
+      #canvas{width:100%}
+      .panel{position:fixed; bottom:0; right:0; left:0; width:100%; height:320px; border-left:none; border-top:1px solid rgba(255,255,255,0.03)}
+    }
+
+    @media (max-width:600px){
+      .panel{height:60vh}
+    }
+
+    /* little helper controls */
+    .row{display:flex;gap:12px;align-items:center}
+    label.small{display:flex;align-items:center;gap:8px}
+    select, input[type="range"], input[type="color"], input[type="text"]{background:transparent;border:1px solid rgba(255,255,255,0.04); color:var(--muted); padding:8px;border-radius:8px; width:100%}
+  </style>
+
+  <!-- MediaPipe libs -->
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js"></script>
+</head>
+<body>
+  <div id="app" class="app">
+    <canvas id="canvas"></canvas>
+
+    <aside class="panel" id="panel">
+      <div class="panel-header">
+        <h1>HANDORA</h1>
+        <p class="muted">Hand · Arm · Body · Alerts · Laser</p>
+      </div>
+
+      <div class="panel-section">
+        <div class="controls-grid">
+          <button id="startBtn" class="btn primary">Start Camera</button>
+          <button id="stopBtn" class="btn" disabled>Stop</button>
+          <button id="bodyModeBtn" class="btn">Enable Body Mode</button>
+          <button id="particleModeBtn" class="btn">Particles: Follow Hands</button>
+        </div>
+      </div>
+
+      <div class="panel-section">
+        <label>Face Filter</label>
+        <div style="display:flex;gap:8px;margin-top:8px;">
+          <select id="filterSelect">
+            <option value="none">None</option>
+            <option value="glasses">Glasses</option>
+            <option value="hat">Hat</option>
+            <option value="mask">Mask</option>
+          </select>
+          <button id="filterToggle" class="btn">Filter: Off</button>
+        </div>
+        <div class="muted small">Anchored overlays: glasses, hat, mask</div>
+      </div>
+
+      <div class="panel-section">
+        <label>Particle Shape</label>
+        <div style="display:flex;gap:8px;margin-top:8px;">
+          <select id="shapeSelect">
+            <option value="circle">Circle</option>
+            <option value="square">Square</option>
+            <option value="triangle">Triangle</option>
+          </select>
+          <label style="display:flex;align-items:center;gap:6px;">
+            <input id="clickEmit" type="checkbox" /> Click Emit
+          </label>
+        </div>
+        <div class="muted small">Spawn shape by fast hand motion or clicks (if enabled)</div>
+      </div>
+
+      <div class="panel-section">
+        <label>Model Complexity (Hands)</label>
+        <input id="handsComplexity" type="range" min="0" max="2" step="1" value="1" />
+        <div class="muted small">lower = faster, higher = more accurate</div>
+      </div>
+
+      <div class="panel-section">
+        <label>Detection Confidence</label>
+        <input id="minDetection" type="range" min="0.1" max="0.9" step="0.05" value="0.6" />
+      </div>
+
+      <div class="panel-section">
+        <label>Motion Sensitivity (spawn)</label>
+        <input id="motionThreshold" type="range" min="300" max="3000" step="50" value="900" />
+        <div class="muted small">Lower = more sensitive (spawns shapes easier)</div>
+      </div>
+
+      <div class="panel-section">
+        <label>Alert Sensitivity (fight/gun)</label>
+        <input id="alertSensitivity" type="range" min="0.4" max="1.2" step="0.05" value="0.7" />
+        <div class="muted small">Adjust heuristics threshold (0.7 default)</div>
+      </div>
+
+      <div class="panel-section">
+        <label>Mirror Camera</label>
+        <input id="mirrorToggle" type="checkbox" checked />
+      </div>
+
+      <div class="panel-section">
+        <label>Alerts</label>
+        <div style="display:flex;gap:8px;margin-top:8px;">
+          <button id="toggleSound" class="btn">Sound: On</button>
+          <button id="toggleSpeak" class="btn">Speech: On</button>
+        </div>
+      </div>
+
+      <div class="panel-section stats">
+        <div>FPS: <span id="fps">—</span></div>
+        <div>Gesture: <strong id="gestureLabel">—</strong></div>
+        <div>Hands: <span id="handsCount">0</span></div>
+        <div>Body Detected: <span id="bodyDetected">No</span></div>
+        <div style="margin-top:6px;color:#ffb4b4">Alerts: <span id="alertState">None</span></div>
+      </div>
+
+      <div class="panel-section footer">
+        <div style="display:flex;gap:6px;align-items:center;justify-content:center;">
+          <button id="openGamesModal" class="btn">Open Games</button>
+          <button id="openFaceFilterModal" class="btn">Face Filters</button>
+        </div>
+        <small class="muted">Made with MediaPipe • HANDORA v3 → Laser</small>
+      </div>
+    </aside>
+
+    <!-- audio -->
+    <audio id="beepAudio" src="alert-beep.mp3"></audio>
+    <audio id="alarmAudio" src="alarm-siren.mp3" loop></audio>
+
+    <!-- Toaster root -->
+    <div id="hf_toast" class="toast-root"></div>
+
+    <!-- app logic -->
+    <script type="module" src="app.js"></script>
+  </div>
+</body>
+</html>
